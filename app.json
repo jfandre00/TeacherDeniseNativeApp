@@ -20,10 +20,23 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.andrelmf.snackffe6746d31564c67a4b7b8f092f248f2"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fef7032e-35d3-4b8e-b18c-e31ec986303e"
+      }
+    },
+    "owner": "andrelmf",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fef7032e-35d3-4b8e-b18c-e31ec986303e"
     }
   }
 }

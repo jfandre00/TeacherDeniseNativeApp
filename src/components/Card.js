@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text } from 'react-native'; // Removido TouchableOpacity e StyleSheet
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -9,7 +9,9 @@ import Animated, {
   runOnJS,
   withTiming,
 } from 'react-native-reanimated';
-import { styles, COLORS } from './styles';
+// REMOVIDO: import * as Speech from 'expo-speech';
+
+import { styles as globalStyles, COLORS } from '../styles/styles';
 
 export default function Card({ word, onSwipeLeft, onSwipeRight, onLongPress }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -19,7 +21,10 @@ export default function Card({ word, onSwipeLeft, onSwipeRight, onLongPress }) {
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 300 });
+    setIsFlipped(false);
   }, [word, opacity]);
+
+  // REMOVIDA a função speakWord daqui.
 
   const springConfig = { damping: 25, stiffness: 80, mass: 1 };
 
@@ -45,7 +50,7 @@ export default function Card({ word, onSwipeLeft, onSwipeRight, onLongPress }) {
 
   const longPressGesture = Gesture.LongPress()
     .minDuration(1000)
-    .onStart(() => runOnJS(onLongPress)(word)); // apenas chama a função do App.js
+    .onStart(() => runOnJS(onLongPress)(word));
 
   const composedGesture = Gesture.Simultaneous(panGesture, tapGesture, longPressGesture);
 
@@ -57,19 +62,20 @@ export default function Card({ word, onSwipeLeft, onSwipeRight, onLongPress }) {
     ],
   }));
 
-  const frontCardStyle = { ...styles.cardFace, backgroundColor: COLORS.primary };
-  const backCardStyle = { ...styles.cardFace, backgroundColor: COLORS.secondary };
+  const frontCardStyle = { ...globalStyles.cardFace, backgroundColor: COLORS.primary };
+  const backCardStyle = { ...globalStyles.cardFace, backgroundColor: COLORS.secondary };
 
   return (
     <GestureDetector gesture={composedGesture}>
-      <Animated.View style={[styles.cardContainer, animatedCardStyle]}>
+      <Animated.View style={[globalStyles.cardContainer, animatedCardStyle]}>
         {isFlipped ? (
           <View style={backCardStyle}>
-            <Text style={styles.cardText}>{word.pt}</Text>
+            <Text style={globalStyles.cardText}>{word.pt}</Text>
           </View>
         ) : (
           <View style={frontCardStyle}>
-            <Text style={styles.cardText}>{word.en}</Text>
+            <Text style={globalStyles.cardText}>{word.en}</Text>
+            {/* REMOVIDO o botão de áudio daqui. */}
           </View>
         )}
       </Animated.View>
@@ -77,3 +83,4 @@ export default function Card({ word, onSwipeLeft, onSwipeRight, onLongPress }) {
   );
 }
 
+// REMOVIDOS os estilos locais do botão de áudio.
