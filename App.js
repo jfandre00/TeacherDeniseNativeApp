@@ -119,7 +119,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
-        {/* Passaremos a nova função 'updateFavoriteNote' para o navegador */}
+       
         <AppNavigator
           user={user}
           setUser={setUser}

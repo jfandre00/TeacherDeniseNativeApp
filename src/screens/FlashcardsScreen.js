@@ -63,7 +63,7 @@ export default function FlashcardsScreen({
   return (
     <SafeAreaView style={globalStyles.container}>
       <Text style={globalStyles.title}>English Flashcards</Text>
-      <Text style={globalStyles.title2}>versão 1.0a</Text>
+      <Text style={globalStyles.title2}>versão TP5</Text>
       <Text style={globalStyles.instructions}>
         Toque para tradução{"\n"}
         Arraste direita p/ próxima{"\n"}
