@@ -9,7 +9,9 @@ import {
   Modal,
   TextInput,
   Button,
+  Alert,
 } from "react-native";
+import * as MailComposer from "expo-mail-composer"; // NOVO: Importa a biblioteca de e-mail
 import { styles as globalStyles, COLORS } from "../styles/styles";
 
 export default function FavoritesScreen({
@@ -18,19 +20,51 @@ export default function FavoritesScreen({
   removeFavorite,
   updateFavoriteNote,
 }) {
-  // NOVO: Estados para controlar o Modal de edição.
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingWord, setEditingWord] = useState(null); // Guarda a palavra que está sendo editada
-  const [noteText, setNoteText] = useState(""); // Guarda o texto da nota
+  const [editingWord, setEditingWord] = useState(null);
+  const [noteText, setNoteText] = useState("");
+
+  // NOVO: Função para formatar e enviar o e-mail
+  const handleEmailExport = async () => {
+    // 1. Verifica se o dispositivo pode enviar e-mails
+    const isAvailable = await MailComposer.isAvailableAsync();
+    if (!isAvailable) {
+      Alert.alert(
+        "E-mail não disponível",
+        "Não foi possível abrir o aplicativo de e-mail. Por favor, verifique se há um cliente de e-mail configurado no seu dispositivo."
+      );
+      return;
+    }
+
+    // 2. Formata a lista de favoritos para o corpo do e-mail
+    const emailBody = favorites
+      .map((fav) => {
+        let entry = `• ${fav.en} -> ${fav.pt}`;
+        if (fav.note) {
+          entry += `\n  Nota: ${fav.note}`;
+        }
+        return entry;
+      })
+      .join("\n\n"); // Adiciona uma linha dupla entre cada palavra
+
+    // 3. Define as opções do e-mail
+    const mailOptions = {
+      recipients: [user.email], // Preenche com o e-mail do usuário logado
+      subject: "Minha Lista de Favoritos - English Flashcards",
+      body: `Olá!\n\nAqui está a sua lista de palavras favoritas salvas no app:\n\n${emailBody}\n\nContinue estudando!\nEquipe English Flashcards`,
+    };
+
+    // 4. Abre a tela de composição de e-mail
+    await MailComposer.composeAsync(mailOptions);
+  };
 
   const handleRemoveFavorite = (wordToRemove) => {
     removeFavorite(wordToRemove, user.email);
   };
 
-  // NOVO: Funções para abrir e fechar o Modal.
   const openEditModal = (word) => {
     setEditingWord(word);
-    setNoteText(word.note || ""); // Pega a nota existente ou uma string vazia
+    setNoteText(word.note || "");
     setIsModalVisible(true);
   };
 
@@ -48,15 +82,24 @@ export default function FavoritesScreen({
         <Text style={globalStyles.favItem}>
           {item.en} → {item.pt}
         </Text>
-        {/* NOVO: Exibe a nota se ela existir. */}
         {item.note && <Text style={styles.noteText}>Nota: {item.note}</Text>}
       </View>
       <View style={styles.favItemActions}>
-        {/* NOVO: Botão de edição. */}
-        <TouchableOpacity onPress={() => openEditModal(item)}>
+        {/* ALTERAÇÃO DE ACESSIBILIDADE ABAIXO */}
+        <TouchableOpacity
+          onPress={() => openEditModal(item)}
+          // NOVO: Adiciona uma etiqueta para leitores de tela
+          accessibilityLabel={`Editar nota para a palavra ${item.en}`}
+        >
           <Text style={styles.actionButton}>✏️</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleRemoveFavorite(item)}>
+        
+        {/* ALTERAÇÃO DE ACESSIBILIDADE ABAIXO */}
+        <TouchableOpacity
+          onPress={() => handleRemoveFavorite(item)}
+          // NOVO: Adiciona uma etiqueta para leitores de tela
+          accessibilityLabel={`Remover ${item.en} dos favoritos`}
+        >
           <Text style={styles.actionButton}>🗑️</Text>
         </TouchableOpacity>
       </View>
@@ -69,6 +112,17 @@ export default function FavoritesScreen({
     >
       <Text style={globalStyles.title}>⭐ Favoritos</Text>
 
+      {/* NOVO: Botão para exportar por e-mail */}
+      {favorites.length > 0 && (
+        <View style={styles.exportButtonContainer}>
+          <Button
+            title="Exportar Favoritos por E-mail"
+            onPress={handleEmailExport}
+            color={COLORS.primary}
+          />
+        </View>
+      )}
+
       {favorites.length === 0 ? (
         <Text style={globalStyles.instructions}>Nenhum favorito ainda.</Text>
       ) : (
@@ -80,7 +134,6 @@ export default function FavoritesScreen({
         />
       )}
 
-      {/* NOVO: Definição do Modal de Edição */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -118,7 +171,6 @@ export default function FavoritesScreen({
   );
 }
 
-// ESTILOS: Adicione/substitua os estilos no final do arquivo.
 const styles = StyleSheet.create({
   favItemContainer: {
     flexDirection: "row",
@@ -145,7 +197,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     paddingHorizontal: 10,
   },
-  // Estilos do Modal
+  // NOVO: Estilo para o container do botão de exportação
+  exportButtonContainer: {
+    marginVertical: 15,
+    width: "90%",
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",

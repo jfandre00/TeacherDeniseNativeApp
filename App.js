@@ -1,17 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 
 import AppNavigator from './src/navigation/AppNavigator';
 
 const USER_STORAGE_KEY = '@english_flashcards:user';
 const FAVORITES_STORAGE_KEY = '@english_flashcards:favorites';
 
+// Mantém a tela de splash visível enquanto carregamos os recursos
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [favoritesByUsers, setFavoritesByUsers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+
+  // NOVO: Carrega as fontes customizadas
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+  });
 
   // O useEffect de carregar e salvar continua igual.
 
@@ -34,6 +45,13 @@ export default function App() {
     };
     loadData();
   }, []);
+
+    // NOVO: Esconde a tela de splash apenas quando as fontes e os dados estiverem carregados.
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded && !isLoading) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, isLoading]);
 
   useEffect(() => {
     const saveUser = async () => {
@@ -112,14 +130,15 @@ export default function App() {
     });
   };
 
-  if (isLoading) {
+ // Se as fontes ou os dados ainda não carregaram, não renderiza nada.
+  if (!fontsLoaded || isLoading) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    // A view principal precisa ter o onLayout para sabermos quando esconder a splash screen
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-       
         <AppNavigator
           user={user}
           setUser={setUser}

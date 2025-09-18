@@ -7,8 +7,10 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
+  StatusBar,
 } from "react-native"; // Adicionado TouchableOpacity e StyleSheet
 import * as Speech from "expo-speech"; // NOVO: Importa a biblioteca de fala aqui
+import { Feather } from "@expo/vector-icons"; // Importa os ícones
 
 import { styles as globalStyles, COLORS } from "../styles/styles"; // Renomeado para evitar conflito
 import words from "../data/words";
@@ -60,16 +62,36 @@ export default function FlashcardsScreen({
     }
   };
 
+  // Extrai o nome do usuário do e-mail para uma saudação mais amigável
+  const getUsername = () => {
+    if (user?.email) {
+      const name = user.email.split("@")[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    return "";
+  };
+
   return (
     <SafeAreaView style={globalStyles.container}>
-      <Text style={globalStyles.title}>English Flashcards</Text>
-      <Text style={globalStyles.title2}>versão TP5</Text>
-      <Text style={globalStyles.instructions}>
-        Toque para tradução{"\n"}
-        Arraste direita p/ próxima{"\n"}
-        Arraste esquerda p/ anterior{"\n"}
-        Segure 1s para Favoritar
-      </Text>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Cabeçalho com saudação e botão de perfil */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>
+            Olá, {user ? getUsername() : "Visitante"}!
+          </Text>
+          <Text style={styles.headerSubtitle}>Pronto para aprender?</Text>
+        </View>
+        {user && (
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => navigation.navigate("Profile")}
+          >
+            <Feather name="user" size={26} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+      </View>
 
       {currentWord && (
         <Card
@@ -81,52 +103,94 @@ export default function FlashcardsScreen({
         />
       )}
 
-      {/* NOVO: Botão de áudio posicionado abaixo do card. */}
-      <TouchableOpacity style={styles.speakButtonContainer} onPress={speakWord}>
-        <Text style={styles.speakButtonText}>🔊 Ouvir Pronúncia</Text>
+      <TouchableOpacity style={styles.speakButton} onPress={speakWord}>
+        <Feather name="volume-2" size={24} color={COLORS.white} />
+        <Text style={styles.speakButtonText}>Ouvir Pronúncia</Text>
       </TouchableOpacity>
 
-      <View>
+      {/* Botões de Ação na parte inferior */}
+      <View style={styles.footer}>
         {user ? (
-          <>
-            <Button
-              title="Ver Favoritos ⭐"
-              onPress={() => navigation.navigate("Favorites")}
-            />
-            <Button
-              title="Meu Perfil"
-              onPress={() => navigation.navigate("Profile")}
-            />
-          </>
+          <TouchableOpacity
+            style={styles.mainActionButton}
+            onPress={() => navigation.navigate("Favorites")}
+          >
+            <Feather name="star" size={24} color={COLORS.white} />
+            <Text style={styles.mainActionButtonText}>Meus Favoritos</Text>
+          </TouchableOpacity>
         ) : (
-          <Button
-            title="Faça Login para Salvar e Ver Favoritos"
+          <TouchableOpacity
+            style={styles.mainActionButton}
             onPress={() => navigation.navigate("Login")}
-          />
+          >
+            <Feather name="log-in" size={24} color={COLORS.white} />
+            <Text style={styles.mainActionButtonText}>Login / Cadastrar</Text>
+          </TouchableOpacity>
         )}
       </View>
     </SafeAreaView>
   );
 }
 
-// NOVO: Estilos locais para o botão de áudio.
+// Estilos específicos para esta tela
 const styles = StyleSheet.create({
-  speakButtonContainer: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
+  header: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 24,
+    color: COLORS.text,
+  },
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 16,
+    color: COLORS.textLight,
+  },
+  profileButton: {
+    padding: 10,
+    backgroundColor: COLORS.white,
+    borderRadius: 50,
+  },
+  speakButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.cardBack,
+    paddingVertical: 15,
     paddingHorizontal: 30,
-    borderRadius: 30,
-    marginVertical: 20, // Espaçamento vertical
-    // Sombra para dar um efeito de elevação
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderRadius: 50,
+    marginVertical: 10,
   },
   speakButtonText: {
-    color: "white",
+    color: COLORS.white,
+    fontFamily: "Poppins-Bold",
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 40,
+    width: "100%",
+    paddingHorizontal: 20,
+  },
+  mainActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.primary,
+    paddingVertical: 18,
+    borderRadius: 50,
+    width: "100%",
+  },
+  mainActionButtonText: {
+    color: COLORS.white,
+    fontFamily: "Poppins-Bold",
     fontSize: 18,
-    fontWeight: "bold",
+    marginLeft: 10,
   },
 });
