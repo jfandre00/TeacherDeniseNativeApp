@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NavigationContainer } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
-import * as Notifications from 'expo-notifications'; // NOVO: Importa a biblioteca de notificações
+import React, { useState, useEffect, useCallback } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { NavigationContainer } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications"; // biblioteca de notificações
 
-import AppNavigator from './src/navigation/AppNavigator';
+import AppNavigator from "./src/navigation/AppNavigator";
 
-const USER_STORAGE_KEY = '@english_flashcards:user';
-const FAVORITES_STORAGE_KEY = '@english_flashcards:favorites';
+const USER_STORAGE_KEY = "@english_flashcards:user";
+const FAVORITES_STORAGE_KEY = "@english_flashcards:favorites";
 
 // NOVO: Configura o comportamento da notificação quando o app está aberto,
 // garantindo que o alerta apareça mesmo com o app em primeiro plano.
@@ -31,8 +31,8 @@ export default function App() {
 
   // Carrega as fontes customizadas
   const [fontsLoaded] = useFonts({
-    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
-    'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+    "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Bold": require("./assets/fonts/Poppins-Bold.ttf"),
   });
 
   // NOVO: useEffect para pedir permissão de notificações uma única vez quando o app inicia.
@@ -40,8 +40,8 @@ export default function App() {
     const registerForPushNotificationsAsync = async () => {
       // Pede permissão ao usuário
       const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Permissão de notificação não concedida pelo usuário.');
+      if (status !== "granted") {
+        console.log("Permissão de notificação não concedida pelo usuário.");
       }
     };
 
@@ -56,12 +56,14 @@ export default function App() {
         if (savedUserString) {
           setUser(JSON.parse(savedUserString));
         }
-        const savedFavoritesString = await AsyncStorage.getItem(FAVORITES_STORAGE_KEY);
+        const savedFavoritesString = await AsyncStorage.getItem(
+          FAVORITES_STORAGE_KEY
+        );
         if (savedFavoritesString) {
           setFavoritesByUsers(JSON.parse(savedFavoritesString));
         }
       } catch (e) {
-        console.error('Falha ao carregar os dados do armazenamento', e);
+        console.error("Falha ao carregar os dados do armazenamento", e);
       } finally {
         setIsLoading(false);
       }
@@ -85,7 +87,7 @@ export default function App() {
           await AsyncStorage.removeItem(USER_STORAGE_KEY);
         }
       } catch (e) {
-        console.error('Falha ao salvar o usuário', e);
+        console.error("Falha ao salvar o usuário", e);
       }
     };
     if (!isLoading) {
@@ -96,16 +98,18 @@ export default function App() {
   useEffect(() => {
     const saveFavorites = async () => {
       try {
-        await AsyncStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoritesByUsers));
+        await AsyncStorage.setItem(
+          FAVORITES_STORAGE_KEY,
+          JSON.stringify(favoritesByUsers)
+        );
       } catch (e) {
-        console.error('Falha ao salvar os favoritos', e);
+        console.error("Falha ao salvar os favoritos", e);
       }
     };
     if (!isLoading) {
       saveFavorites();
     }
   }, [favoritesByUsers, isLoading]);
-
 
   const currentUserFavorites = user ? favoritesByUsers[user.email] || [] : [];
 
@@ -118,11 +122,11 @@ export default function App() {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Hey, hora de estudar! 🤓",
-        body: 'Não se esqueça de rever os seus favoritos para continuar a aprender.',
+        body: "Não se esqueça de rever os seus favoritos para continuar a aprender.",
       },
       trigger: {
-        seconds: 20, // 24 horas em segundos 24 * 60 * 60
-        // Para testes, pode usar um valor baixo vou deixar 20 segundos
+        seconds: 24 * 60 * 60, // 24 horas em segundos 24 * 60 * 60
+        // Para testes vou deixar 20 segundos
       },
     });
     console.log("Lembrete de estudo agendado para daqui a 24 horas.");
@@ -130,10 +134,10 @@ export default function App() {
 
   // A função 'addFavorite' agora inclui uma propriedade 'note' vazia.
   const addFavorite = (word, userEmail) => {
-    setFavoritesByUsers(prevFavorites => {
+    setFavoritesByUsers((prevFavorites) => {
       const userFavorites = prevFavorites[userEmail] || [];
-      if (!userFavorites.some(fav => fav.en === word.en)) {
-        const newFavorite = { ...word, note: '' };
+      if (!userFavorites.some((fav) => fav.en === word.en)) {
+        const newFavorite = { ...word, note: "" };
         scheduleStudyReminder(); // NOVO: Agenda o lembrete quando um novo favorito é adicionado.
         return {
           ...prevFavorites,
@@ -145,17 +149,19 @@ export default function App() {
   };
 
   const removeFavorite = (word, userEmail) => {
-    setFavoritesByUsers(prevFavorites => ({
+    setFavoritesByUsers((prevFavorites) => ({
       ...prevFavorites,
-      [userEmail]: (prevFavorites[userEmail] || []).filter(fav => fav.en !== word.en),
+      [userEmail]: (prevFavorites[userEmail] || []).filter(
+        (fav) => fav.en !== word.en
+      ),
     }));
   };
 
   // Função para atualizar a nota de um favorito.
   const updateFavoriteNote = (wordToUpdate, newNote, userEmail) => {
-    setFavoritesByUsers(prevFavorites => {
+    setFavoritesByUsers((prevFavorites) => {
       const userFavorites = prevFavorites[userEmail] || [];
-      const updatedFavorites = userFavorites.map(fav => {
+      const updatedFavorites = userFavorites.map((fav) => {
         if (fav.en === wordToUpdate.en) {
           return { ...fav, note: newNote };
         }
