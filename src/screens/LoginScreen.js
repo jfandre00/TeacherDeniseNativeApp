@@ -1,31 +1,41 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { styles as globalStyles, COLORS } from '../styles/styles';
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { styles as globalStyles, COLORS } from "../styles/styles";
+import { Base64 } from "js-base64";
 
-// NOVO: Nossa "base de dados" de usuários autorizados.
-// No futuro, isso poderia vir de uma API ou banco de dados.
-const authorizedUsers = [
-  { email: 'andre@andre.com', password: 'andre' },
-  { email: 'denise@denise.com', password: 'denise' },
-  { email: 'kennedy@kennedy.com', password: 'kennedy' },
-];
+import authorizedUsersEncoded from "../data/authData";
 
 export default function LoginScreen({ navigation, setUser }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // ALTERADO: A função de login agora tem uma lógica de validação.
   const handleLogin = () => {
     // 1. Validação básica para campos vazios (continua igual)
-    if (email.trim() === '' || password.trim() === '') {
-      Alert.alert('Erro', 'Por favor, preencha o e-mail e a senha.');
+    if (email.trim() === "" || password.trim() === "") {
+      Alert.alert("Erro", "Por favor, preencha o e-mail e a senha.");
       return;
     }
 
-    // 2. Procuramos pelo usuário na nossa lista de autorizados.
-    // Usamos toLowerCase() no e-mail para não diferenciar maiúsculas/minúsculas.
+    // NOVO: Decodifica a lista de usuários antes de usar
+    const authorizedUsers = authorizedUsersEncoded.map((encodedUser) => ({
+      email: Base64.decode(encodedUser.email),
+      password: Base64.decode(encodedUser.password),
+    }));
+
+    // 2. A lógica de verificação agora usa a lista decodificada
     const foundUser = authorizedUsers.find(
-      user => user.email.toLowerCase() === email.trim().toLowerCase() && user.password === password.trim()
+      (user) =>
+        user.email.toLowerCase() === email.trim().toLowerCase() &&
+        user.password === password.trim()
     );
 
     // 3. Verificamos se o usuário foi encontrado.
@@ -35,7 +45,10 @@ export default function LoginScreen({ navigation, setUser }) {
       setUser({ email: foundUser.email });
     } else {
       // Se não encontrou, negamos o acesso.
-      Alert.alert('Acesso Negado', 'E-mail ou senha incorretos. Por favor, tente novamente.');
+      Alert.alert(
+        "Acesso Negado",
+        "E-mail ou senha incorretos. Por favor, tente novamente."
+      );
     }
   };
 
@@ -43,10 +56,10 @@ export default function LoginScreen({ navigation, setUser }) {
     <SafeAreaView style={globalStyles.container}>
       <Text style={globalStyles.title}>Área VIP</Text>
       <View style={styles.formContainer}>
-
         {/* NOVO: Aviso na tela de login para testes. */}
         <Text style={styles.testInfo}>
-          Atenção! Use o e-mail kennedy@kennedy.com e senha kennedy para acessar.
+          Atenção! Use o e-mail kennedy@kennedy.com e senha kennedy para
+          acessar.
         </Text>
 
         <TextInput
@@ -70,30 +83,30 @@ export default function LoginScreen({ navigation, setUser }) {
   );
 }
 
-// Estilos (adicionei um estilo para o texto de aviso)
+// Estilos LOCAIS
 const styles = StyleSheet.create({
   formContainer: {
-    width: '80%',
+    width: "80%",
     marginTop: 20,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     fontSize: 16,
   },
   // NOVO: Estilo para o texto de aviso
   testInfo: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 20,
     padding: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     borderRadius: 5,
   },
 });

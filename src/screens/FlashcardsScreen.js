@@ -2,17 +2,16 @@ import React, { useState } from "react";
 import {
   SafeAreaView,
   Text,
-  Button,
   Alert,
   View,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-} from "react-native"; // Adicionado TouchableOpacity e StyleSheet
-import * as Speech from "expo-speech"; // NOVO: Importa a biblioteca de fala aqui
-import { Feather } from "@expo/vector-icons"; // Importa os ícones
+} from "react-native";
+import * as Speech from "expo-speech";
+import { Feather } from "@expo/vector-icons";
 
-import { styles as globalStyles, COLORS } from "../styles/styles"; // Renomeado para evitar conflito
+import { styles as globalStyles, COLORS } from "../styles/styles";
 import words from "../data/words";
 import Card from "../components/Card";
 
@@ -54,15 +53,12 @@ export default function FlashcardsScreen({
     }
   };
 
-  // NOVO: A função de áudio agora vive na tela principal.
   const speakWord = () => {
-    // Verifica se existe uma palavra sendo exibida
     if (currentWord) {
       Speech.speak(currentWord.en, { language: "en-US" });
     }
   };
 
-  // Extrai o nome do usuário do e-mail para uma saudação mais amigável
   const getUsername = () => {
     if (user?.email) {
       const name = user.email.split("@")[0];
@@ -78,10 +74,15 @@ export default function FlashcardsScreen({
       {/* Cabeçalho com saudação e botão de perfil */}
       <View style={styles.header}>
         <View>
+          {user && (
+        <Text style={styles.appTitle}>
+          Teacher Denise's Flashcards v2.0
+          </Text>
+      )}
           <Text style={styles.headerTitle}>
             Olá, {user ? getUsername() : "Visitante"}!
           </Text>
-          <Text style={styles.headerSubtitle}>Pronto para aprender?</Text>
+          <Text style={styles.headerSubtitle}>{user ? "Pronto para aprender?" : "Welcome to Teacher Denise's Flashcards"}</Text>
         </View>
         {user && (
           <TouchableOpacity
@@ -92,6 +93,13 @@ export default function FlashcardsScreen({
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Botão para o formulário, visível apenas para visitantes */}
+      {!user && (
+        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('InterestForm')}>
+          <Text style={styles.ctaButtonText}>✨ Quero ser Aluno(a) VIP!</Text>
+        </TouchableOpacity>
+      )}
 
       {currentWord && (
         <Card
@@ -139,12 +147,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   headerTitle: {
     fontFamily: "Poppins-Bold",
     fontSize: 24,
     color: COLORS.text,
+  },
+  appTitle: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 18,
+    color: COLORS.text,
+    marginBottom: 25,
+    fontWeight: "600",
   },
   headerSubtitle: {
     fontFamily: "Poppins-Regular",
@@ -156,6 +171,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 50,
   },
+  ctaButton: {
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 50,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  ctaButtonText: {
+    color: COLORS.white,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+  },
   speakButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -165,6 +196,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 50,
     marginVertical: 10,
+    marginBottom: 20,
   },
   speakButtonText: {
     color: COLORS.white,
@@ -194,3 +226,4 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
+

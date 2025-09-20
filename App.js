@@ -4,11 +4,22 @@ import { NavigationContainer } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications'; // NOVO: Importa a biblioteca de notificações
 
 import AppNavigator from './src/navigation/AppNavigator';
 
 const USER_STORAGE_KEY = '@english_flashcards:user';
 const FAVORITES_STORAGE_KEY = '@english_flashcards:favorites';
+
+// NOVO: Configura o comportamento da notificação quando o app está aberto,
+// garantindo que o alerta apareça mesmo com o app em primeiro plano.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // Mantém a tela de splash visível enquanto carregamos os recursos
 SplashScreen.preventAutoHideAsync();
@@ -18,14 +29,26 @@ export default function App() {
   const [favoritesByUsers, setFavoritesByUsers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // NOVO: Carrega as fontes customizadas
+  // Carrega as fontes customizadas
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
     'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
   });
 
-  // O useEffect de carregar e salvar continua igual.
+  // NOVO: useEffect para pedir permissão de notificações uma única vez quando o app inicia.
+  useEffect(() => {
+    const registerForPushNotificationsAsync = async () => {
+      // Pede permissão ao usuário
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permissão de notificação não concedida pelo usuário.');
+      }
+    };
 
+    registerForPushNotificationsAsync();
+  }, []); // O array vazio [] garante que isso rode apenas uma vez.
+
+  // O useEffect de carregar e salvar continua igual.
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -46,7 +69,7 @@ export default function App() {
     loadData();
   }, []);
 
-    // NOVO: Esconde a tela de splash apenas quando as fontes e os dados estiverem carregados.
+  // Esconde a tela de splash apenas quando as fontes e os dados estiverem carregados.
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded && !isLoading) {
       await SplashScreen.hideAsync();
@@ -86,13 +109,32 @@ export default function App() {
 
   const currentUserFavorites = user ? favoritesByUsers[user.email] || [] : [];
 
-  // ALTERADO: A função 'addFavorite' agora inclui uma propriedade 'note' vazia.
+  // NOVO: Função central para agendar o lembrete de estudo.
+  const scheduleStudyReminder = async () => {
+    // Primeiro, cancela todas as notificações futuras para evitar duplicatas.
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    // Agenda uma nova notificação para ser disparada em 24 horas.
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Hey, hora de estudar! 🤓",
+        body: 'Não se esqueça de rever os seus favoritos para continuar a aprender.',
+      },
+      trigger: {
+        seconds: 20, // 24 horas em segundos 24 * 60 * 60
+        // Para testes, pode usar um valor baixo vou deixar 20 segundos
+      },
+    });
+    console.log("Lembrete de estudo agendado para daqui a 24 horas.");
+  };
+
+  // A função 'addFavorite' agora inclui uma propriedade 'note' vazia.
   const addFavorite = (word, userEmail) => {
     setFavoritesByUsers(prevFavorites => {
       const userFavorites = prevFavorites[userEmail] || [];
       if (!userFavorites.some(fav => fav.en === word.en)) {
-        // Adicionamos o novo favorito com a propriedade 'note'.
         const newFavorite = { ...word, note: '' };
+        scheduleStudyReminder(); // NOVO: Agenda o lembrete quando um novo favorito é adicionado.
         return {
           ...prevFavorites,
           [userEmail]: [...userFavorites, newFavorite],
@@ -109,20 +151,17 @@ export default function App() {
     }));
   };
 
-  // NOVO: Função para atualizar a nota de um favorito.
+  // Função para atualizar a nota de um favorito.
   const updateFavoriteNote = (wordToUpdate, newNote, userEmail) => {
     setFavoritesByUsers(prevFavorites => {
       const userFavorites = prevFavorites[userEmail] || [];
       const updatedFavorites = userFavorites.map(fav => {
-        // Se encontrarmos a palavra que queremos atualizar...
         if (fav.en === wordToUpdate.en) {
-          // ...retornamos um novo objeto com a nota atualizada.
           return { ...fav, note: newNote };
         }
-        // Caso contrário, retornamos o favorito como ele estava.
         return fav;
       });
-
+      scheduleStudyReminder(); // NOVO: Também agenda o lembrete quando uma nota é editada.
       return {
         ...prevFavorites,
         [userEmail]: updatedFavorites,
@@ -130,7 +169,7 @@ export default function App() {
     });
   };
 
- // Se as fontes ou os dados ainda não carregaram, não renderiza nada.
+  // Se as fontes ou os dados ainda não carregaram, não renderiza nada.
   if (!fontsLoaded || isLoading) {
     return null;
   }
