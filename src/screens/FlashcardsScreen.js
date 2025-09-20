@@ -24,6 +24,14 @@ export default function FlashcardsScreen({
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentWord = words[currentIndex];
 
+  // NOVO: Lógica para calcular as métricas do dashboard
+  const totalWordsCount = words.length;
+  const savedCount = favorites ? favorites.length : 0;
+  const percentage =
+    totalWordsCount > 0
+      ? Math.round((savedCount / totalWordsCount) * 100)
+      : 0;
+
   const handleSwipeRight = () =>
     setCurrentIndex((prev) => (prev + 1) % words.length);
   const handleSwipeLeft = () =>
@@ -75,14 +83,16 @@ export default function FlashcardsScreen({
       <View style={styles.header}>
         <View>
           {user && (
-        <Text style={styles.appTitle}>
-          Teacher Denise's Flashcards v2.0
-          </Text>
-      )}
+            <Text style={styles.appTitle}>
+              Teacher Denise's Flashcards v2.0
+            </Text>
+          )}
           <Text style={styles.headerTitle}>
             Olá, {user ? getUsername() : "Visitante"}!
           </Text>
-          <Text style={styles.headerSubtitle}>{user ? "Pronto para aprender?" : "Welcome to Teacher Denise's Flashcards"}</Text>
+          <Text style={styles.headerSubtitle}>
+            {user ? "Pronto para aprender?" : "Welcome to Teacher Denise's Flashcards"}
+          </Text>
         </View>
         {user && (
           <TouchableOpacity
@@ -94,9 +104,25 @@ export default function FlashcardsScreen({
         )}
       </View>
 
+      {/* NOVO: Card de Resumo, visível apenas para usuários logados */}
+      {user && (
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Seu Progresso</Text>
+          <Text style={styles.summaryText}>
+            {savedCount} de {totalWordsCount} palavras salvas
+          </Text>
+          <Text style={styles.summaryPercentage}>
+            Você já domina {percentage}% do vocabulário!
+          </Text>
+        </View>
+      )}
+
       {/* Botão para o formulário, visível apenas para visitantes */}
       {!user && (
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('InterestForm')}>
+        <TouchableOpacity
+          style={styles.ctaButton}
+          onPress={() => navigation.navigate("InterestForm")}
+        >
           <Text style={styles.ctaButtonText}>✨ Quero ser Aluno(a) VIP!</Text>
         </TouchableOpacity>
       )}
@@ -171,6 +197,36 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 50,
   },
+  // NOVO: Estilos para o Card de Resumo
+  summaryCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  summaryTitle: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 16,
+    color: COLORS.text,
+    marginBottom: 5,
+  },
+  summaryText: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: COLORS.textLight,
+  },
+  summaryPercentage: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 14,
+    color: COLORS.primary,
+    marginTop: 5,
+  },
   ctaButton: {
     backgroundColor: COLORS.secondary,
     paddingVertical: 12,
@@ -226,4 +282,3 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
-

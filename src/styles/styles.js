@@ -43,8 +43,8 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardContainer: {
-    width: 300,
-    height: 400,
+    width: 280,
+    height: 280,
     borderRadius: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
